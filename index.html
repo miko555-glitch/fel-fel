@@ -1,0 +1,1497 @@
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>فلفل (لولو) - ثيم الفضاء والنجوم</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Cairo & Great Vibes for Hannah Constellation Signature -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Caveat:wght@700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            font-family: 'Cairo', sans-serif;
+            background: radial-gradient(circle at 50% 42%, #071636 0%, #03091a 55%, #010308 100%);
+            touch-action: none;
+            color: #ffffff;
+        }
+
+        #stage-container {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Cosmic Nebula Glass UI */
+        .cosmic-glass {
+            background: rgba(5, 13, 33, 0.76);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.28);
+            box-shadow: 0 8px 28px rgba(0, 8, 28, 0.75), inset 0 0 18px rgba(56, 189, 248, 0.08);
+        }
+
+        .cosmic-btn {
+            transition: transform 0.12s ease, background 0.2s ease, box-shadow 0.2s ease;
+        }
+        .cosmic-btn:active {
+            transform: scale(0.91);
+        }
+        .cosmic-btn.active-scene {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            border-color: #7dd3fc;
+            box-shadow: 0 0 16px rgba(56, 189, 248, 0.55);
+            color: #fff;
+        }
+        .cosmic-btn.active-action {
+            background: linear-gradient(135deg, #ea580c, #f59e0b);
+            border-color: #fde68a;
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.55);
+            color: #fff;
+        }
+
+        /* Floating Cosmic Text & Hearts */
+        #fx-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 25;
+            overflow: hidden;
+        }
+        .float-item {
+            position: absolute;
+            font-weight: 900;
+            pointer-events: none;
+            white-space: nowrap;
+            animation: floatUp 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.65));
+        }
+        @keyframes floatUp {
+            0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+            22% { opacity: 1; transform: translate(-50%, -36px) scale(1.08); }
+            100% { opacity: 0; transform: translate(-50%, -105px) scale(0.95); }
+        }
+
+        /* Hide horizontal scrollbar on scene strip */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="select-none">
+
+    <!-- Hidden File Input so user can also load the exact photo file from phone gallery if desired -->
+    <input id="photo-upload" type="file" accept="image/*" class="hidden" onchange="handleUserPhoto(event)">
+
+    <!-- 2D Hardware-Accelerated Cosmic Interactive Stage (Zero Lag on Mobile) -->
+    <div id="stage-container">
+        <canvas id="cosmic-canvas"></canvas>
+    </div>
+
+    <!-- Floating Particles & Popups -->
+    <div id="fx-layer"></div>
+
+    <!-- TOP MOBILE COSMIC HUD -->
+    <header class="fixed top-0 left-0 right-0 z-30 pt-2 px-2.5 flex flex-col gap-1.5 pointer-events-none max-w-md mx-auto">
+        <div class="cosmic-glass rounded-3xl px-3 py-2 flex items-center justify-between gap-2 pointer-events-auto">
+            <!-- Cat Avatar & Cosmic Love Meter -->
+            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                <div class="relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-900 via-sky-600 to-amber-500 flex items-center justify-center text-2xl border border-sky-300/60 shadow-[0_0_15px_rgba(56,189,248,0.5)] shrink-0">
+                    🌌
+                    <span id="purr-pill" class="hidden absolute -bottom-1 -right-1 bg-sky-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow border border-sky-200">
+                        خررر ♪
+                    </span>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5">
+                        <h1 class="text-sm font-black text-sky-100 truncate drop-shadow">فلفل (لولو) ✨ Hannah</h1>
+                        <span class="text-[10px] font-extrabold bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded-full border border-sky-400/30">
+                            <span id="touch-counter">0</span> لمسة
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-1.5 mt-1">
+                        <span class="text-xs">💙</span>
+                        <div class="flex-1 h-2 bg-slate-950/90 rounded-full overflow-hidden border border-sky-500/40 p-0.5">
+                            <div id="love-bar" class="h-full bg-gradient-to-r from-sky-400 via-blue-500 to-amber-400 rounded-full transition-all duration-300 shadow-[0_0_10px_#38bdf8]" style="width: 88%;"></div>
+                        </div>
+                        <span id="love-txt" class="text-[10px] font-black text-sky-200 w-7 text-left">88%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Cosmic Toggles: Upload Real Photo, Toggle Starlight Aura, Toggle Bow, Sound -->
+            <div class="flex items-center gap-1 shrink-0">
+                <button onclick="document.getElementById('photo-upload').click()" title="اختر صورة فلفل من الموبايل" class="cosmic-btn px-2.5 h-9 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 border border-amber-200/70 flex items-center justify-center gap-1 text-[11px] font-black shadow-[0_0_12px_rgba(245,158,11,0.5)]">
+                    <span>📸</span>
+                    <span>صورته</span>
+                </button>
+                <button id="btn-cosmic-glow" onclick="toggleCosmicAura()" title="وهج النجوم الفضائي" class="cosmic-btn w-9 h-9 rounded-2xl bg-sky-500/30 border border-sky-300/60 flex items-center justify-center text-base shadow-sm">
+                    ✨
+                </button>
+                <button onclick="toggleAudio()" title="الصوت" class="cosmic-btn w-9 h-9 rounded-2xl bg-slate-900/90 border border-sky-500/40 flex items-center justify-center text-sm text-sky-300 shadow-sm">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Hint Pill -->
+        <div class="flex justify-center">
+            <div class="cosmic-glass rounded-full px-3.5 py-1 text-[11px] font-bold text-sky-100 flex items-center gap-1.5 max-w-full truncate pointer-events-auto">
+                <span id="hint-icon">🌌</span>
+                <span id="hint-msg" class="truncate">مشي صباعك على فرو فلفل الفضائي وشوف الشعر والنجوم بتتفاعل معاك!</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- BOTTOM MOBILE CONTROLS (FAST & THUMB-FRIENDLY) -->
+    <footer class="fixed bottom-0 left-0 right-0 z-30 pb-2.5 pt-1 px-2.5 flex flex-col gap-1.5 pointer-events-none max-w-md mx-auto">
+
+        <!-- 5 Exact Photo Scenes Strip -->
+        <div class="cosmic-glass rounded-3xl p-2 pointer-events-auto">
+            <div class="flex items-center justify-between px-1 mb-1.5">
+                <span class="text-[11px] font-extrabold text-sky-200">🖼️ مشاهد فلفل من صورك (بدون أي تهنيج):</span>
+                <button onclick="triggerSupernovaLove()" class="text-[10px] font-black text-amber-200 bg-amber-500/25 px-2.5 py-0.5 rounded-full border border-amber-400/50 active:scale-95">
+                    شلال نجوم ✨💙
+                </button>
+            </div>
+
+            <div class="grid grid-cols-5 gap-1">
+                <button id="scene-cosmic" onclick="setPhotoScene('cosmic')" class="cosmic-btn active-scene bg-slate-900/85 text-sky-100 border border-sky-500/30 rounded-2xl py-1.5 px-1 flex flex-col items-center justify-center gap-0.5">
+                    <span class="text-base leading-none">🌌</span>
+                    <span class="text-[10px] font-black">غلاف Hannah</span>
+                </button>
+
+                <button id="scene-tuesday" onclick="setPhotoScene('tuesday')" class="cosmic-btn bg-slate-900/85 text-sky-100 border border-sky-500/30 rounded-2xl py-1.5 px-1 flex flex-col items-center justify-center gap-0.5">
+                    <span class="text-base leading-none">😻</span>
+                    <span class="text-[10px] font-black">Tuesday</span>
+                </button>
+
+                <button id="scene-phone" onclick="setPhotoScene('phone')" class="cosmic-btn bg-slate-900/85 text-sky-100 border border-sky-500/30 rounded-2xl py-1.5 px-1 flex flex-col items-center justify-center gap-0.5">
+                    <span class="text-base leading-none">📱</span>
+                    <span class="text-[10px] font-black">الموبايل</span>
+                </button>
+
+                <button id="scene-sun" onclick="setPhotoScene('sun')" class="cosmic-btn bg-slate-900/85 text-sky-100 border border-sky-500/30 rounded-2xl py-1.5 px-1 flex flex-col items-center justify-center gap-0.5">
+                    <span class="text-base leading-none">☀️</span>
+                    <span class="text-[10px] font-black">رفعة الدقن</span>
+                </button>
+
+                <button id="scene-bow" onclick="setPhotoScene('bow')" class="cosmic-btn bg-slate-900/85 text-sky-100 border border-sky-500/30 rounded-2xl py-1.5 px-1 flex flex-col items-center justify-center gap-0.5">
+                    <span class="text-base leading-none">🎀</span>
+                    <span class="text-[10px] font-black">الفيونكة</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Cute Animations & Petting Bar -->
+        <div class="cosmic-glass rounded-3xl p-1.5 grid grid-cols-5 gap-1.5 pointer-events-auto">
+            <button id="act-pet" onclick="setInteractionMode('pet')" class="cosmic-btn active-action rounded-2xl py-2 px-1 flex flex-col items-center justify-center gap-0.5 border border-sky-500/30 bg-slate-900/85 text-sky-100">
+                <span class="text-lg leading-none">✨</span>
+                <span class="text-[10px] font-black">دلع الفرو</span>
+            </button>
+
+            <button id="act-chin" onclick="triggerCuteAnim('chin')" class="cosmic-btn rounded-2xl py-2 px-1 flex flex-col items-center justify-center gap-0.5 border border-sky-500/30 bg-slate-900/85 text-sky-100">
+                <span class="text-lg leading-none">😌</span>
+                <span class="text-[10px] font-black">هرش الدقن</span>
+            </button>
+
+            <button id="act-boop" onclick="triggerCuteAnim('boop')" class="cosmic-btn rounded-2xl py-2 px-1 flex flex-col items-center justify-center gap-0.5 border border-sky-500/30 bg-slate-900/85 text-sky-100">
+                <span class="text-lg leading-none">👃</span>
+                <span class="text-[10px] font-black">بوسة مناخير</span>
+            </button>
+
+            <button id="act-knead" onclick="triggerCuteAnim('knead')" class="cosmic-btn rounded-2xl py-2 px-1 flex flex-col items-center justify-center gap-0.5 border border-sky-500/30 bg-slate-900/85 text-sky-100">
+                <span class="text-lg leading-none">🐾</span>
+                <span class="text-[10px] font-black">عجن الكفوف</span>
+            </button>
+
+            <button id="act-treat" onclick="triggerCuteAnim('treat')" class="cosmic-btn rounded-2xl py-2 px-1 flex flex-col items-center justify-center gap-0.5 border border-sky-500/30 bg-slate-900/85 text-sky-100">
+                <span class="text-lg leading-none">🐟</span>
+                <span class="text-[10px] font-black">أكّله سمكة</span>
+            </button>
+        </div>
+    </footer>
+
+    <script>
+        /********************************************************************
+         * 1. WEB AUDIO SYNTHESIZER (PURR + SWEET MEOW + COSMIC CHIME)
+         ********************************************************************/
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+                this.purrGain = null;
+                this.lastMeow = 0;
+                this.lastVib = 0;
+            }
+            init() {
+                if (this.ctx) return;
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                this.ctx = new AudioCtx();
+
+                const osc1 = this.ctx.createOscillator();
+                const osc2 = this.ctx.createOscillator();
+                osc1.type = 'sawtooth';
+                osc2.type = 'triangle';
+                osc1.frequency.value = 25;
+                osc2.frequency.value = 50;
+
+                const lfo = this.ctx.createOscillator();
+                lfo.frequency.value = 1.7;
+                const lfoGain = this.ctx.createGain();
+                lfoGain.gain.value = 4.2;
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc1.frequency);
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 135;
+
+                this.purrGain = this.ctx.createGain();
+                this.purrGain.gain.value = 0;
+
+                osc1.connect(filter);
+                osc2.connect(filter);
+                filter.connect(this.purrGain);
+                this.purrGain.connect(this.ctx.destination);
+
+                osc1.start();
+                osc2.start();
+                lfo.start();
+            }
+            setPurr(level) {
+                if (!this.enabled) level = 0;
+                if (!this.ctx && level > 0.05) this.init();
+                if (!this.ctx || !this.purrGain) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+
+                const vol = Math.max(0, Math.min(0.30, level * 0.30));
+                this.purrGain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.08);
+
+                if (level > 0.3 && navigator.vibrate && performance.now() - this.lastVib > 420) {
+                    this.lastVib = performance.now();
+                    try { navigator.vibrate(12); } catch (e) {}
+                }
+            }
+            meow(type = 'sweet') {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+
+                const now = this.ctx.currentTime;
+                if (now - this.lastMeow < 0.45) return;
+                this.lastMeow = now;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+                osc.type = 'triangle';
+                filter.type = 'bandpass';
+                filter.frequency.value = 1200;
+
+                if (type === 'sweet') {
+                    osc.frequency.setValueAtTime(530, now);
+                    osc.frequency.exponentialRampToValueAtTime(860, now + 0.12);
+                    osc.frequency.exponentialRampToValueAtTime(650, now + 0.35);
+                    osc.frequency.exponentialRampToValueAtTime(480, now + 0.52);
+                    gain.gain.setValueAtTime(0.001, now);
+                    gain.gain.linearRampToValueAtTime(0.18, now + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+                    osc.start(now);
+                    osc.stop(now + 0.56);
+                } else {
+                    osc.frequency.setValueAtTime(620, now);
+                    osc.frequency.exponentialRampToValueAtTime(980, now + 0.18);
+                    gain.gain.setValueAtTime(0.001, now);
+                    gain.gain.linearRampToValueAtTime(0.14, now + 0.03);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.21);
+                    osc.start(now);
+                    osc.stop(now + 0.22);
+                }
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+            }
+        }
+        const sound = new SoundEngine();
+
+        /********************************************************************
+         * 2. ULTRA-FAST 60FPS 2D COSMIC PHOTO-PORTRAIT & INTERACTIVE FUR ENGINE
+         *    - Zero WebGL Lag, Zero Hand Overlay
+         *    - Recreates the exact "Hannah" Cosmic Nebula Loaf Cover (1000699973.jpg)
+         *      plus the 4 other uploaded photos of Felfel!
+         ********************************************************************/
+        const canvas = document.getElementById('cosmic-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let W = window.innerWidth;
+        let H = window.innerHeight;
+        let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        const state = {
+            scene: 'cosmic',       // 'cosmic' (Hannah Cover), 'tuesday', 'phone', 'sun', 'bow', 'custom'
+            cosmicAura: true,      // Toggles electric-blue & golden nebula glow around Felfel
+            love: 88,
+            touches: 0,
+            purr: 0,
+            isDown: false,
+            pointerX: 0,
+            pointerY: 0,
+            lastPointerX: 0,
+            lastPointerY: 0,
+            vx: 0,
+            vy: 0,
+            // Cute Animation Timers
+            chinLiftTimer: 0,
+            boopTimer: 0,
+            kneadTimer: 0,
+            treatTimer: 0,
+            eyeLookX: 0,
+            eyeLookY: 0,
+            customImg: null
+        };
+
+        // Background Cosmic Stars & Shooting Stars
+        const bgStars = [];
+        const dustParticles = [];
+        const furStrands = [];
+
+        function initCosmicSpace() {
+            bgStars.length = 0;
+            const count = 130;
+            for (let i = 0; i < count; i++) {
+                const isBright = i < 14;
+                const isGold = i % 3 === 0;
+                bgStars.push({
+                    x: Math.random(),
+                    y: Math.random(),
+                    r: isBright ? 1.8 + Math.random() * 2.2 : 0.6 + Math.random() * 1.3,
+                    phase: Math.random() * Math.PI * 2,
+                    speed: 1.5 + Math.random() * 3.0,
+                    color: isGold ? '#fbbf24' : '#7dd3fc',
+                    bright: isBright
+                });
+            }
+        }
+
+        // Build Interactive Fur Strands mapped onto Felfel's portrait for each scene
+        function buildInteractiveFur() {
+            furStrands.length = 0;
+            const cx = W * 0.5;
+            const cy = H * 0.46;
+            const scale = Math.min(W, H) * 0.42;
+
+            const count = 480;
+            for (let i = 0; i < count; i++) {
+                // Distribute strands within Felfel's silhouette depending on active scene
+                let rx = (Math.random() - 0.5) * 1.55;
+                let ry = (Math.random() - 0.5) * 1.15;
+
+                if (state.scene === 'cosmic') {
+                    // Side-3/4 loaf silhouette matching 1000699973.jpg
+                    const inBody = Math.hypot((rx + 0.12) * 0.85, (ry - 0.08) * 1.35) < 0.62;
+                    const inHead = Math.hypot((rx - 0.34) * 1.15, (ry + 0.14) * 1.15) < 0.38;
+                    if (!inBody && !inHead) continue;
+                } else {
+                    if (Math.hypot(rx * 0.95, ry * 0.95) > 0.72) continue;
+                }
+
+                // Determine if strand is in Felfel's snowy-white / electric-blue zone or ginger-gold zone
+                let isWhiteBlue = false;
+                if (state.scene === 'cosmic') {
+                    // White/blue chest, tucked paw, diagonal shoulder stripe, and nose blaze
+                    const shoulderStripe = Math.abs((ry - 0.05) - (rx - 0.05) * 0.85) < 0.11 && rx > -0.15 && rx < 0.28;
+                    const chestAndPaw = rx > 0.05 && ry > 0.08;
+                    const faceBlaze = rx > 0.42 && Math.abs(ry + 0.10) < 0.16;
+                    isWhiteBlue = shoulderStripe || chestAndPaw || faceBlaze;
+                } else if (state.scene === 'tuesday') {
+                    isWhiteBlue = (rx * rx * 1.8 + (ry - 0.12) * (ry - 0.12)) < 0.22;
+                } else if (state.scene === 'sun') {
+                    isWhiteBlue = Math.abs(rx) < 0.38 && ry > -0.25;
+                } else {
+                    isWhiteBlue = ry > 0.05 || Math.abs(rx) < 0.18;
+                }
+
+                const baseAngle = Math.atan2(ry, rx) * 0.35 + (isWhiteBlue ? 0.4 : 0.15);
+                furStrands.push({
+                    nx: rx,
+                    ny: ry,
+                    x: cx + rx * scale,
+                    y: cy + ry * scale,
+                    baseAngle,
+                    angle: baseAngle,
+                    vel: 0,
+                    len: (13 + Math.random() * 11) * (scale / 170),
+                    isWhiteBlue,
+                    glow: 0
+                });
+            }
+        }
+
+        function resizeStage() {
+            W = window.innerWidth;
+            H = window.innerHeight;
+            dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = Math.floor(W * dpr);
+            canvas.height = Math.floor(H * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            buildInteractiveFur();
+        }
+        initCosmicSpace();
+        resizeStage();
+        window.addEventListener('resize', resizeStage);
+
+        /********************************************************************
+         * 3. DRAWING THE 5 EXACT PHOTO SCENES OF FELFEL + "Hannah" SPACE COVER
+         ********************************************************************/
+
+        // Helper: Draw 4-point glowing cosmic star (matches 1000699973.jpg bright stars)
+        function drawStarFlare(x, y, radius, color) {
+            ctx.save();
+            ctx.translate(x, y);
+            const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius * 3.5);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.25, color);
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(-radius * 4.2, 0);
+            ctx.lineTo(radius * 4.2, 0);
+            ctx.moveTo(0, -radius * 4.2);
+            ctx.lineTo(0, radius * 4.2);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Helper: Draw Glowing Constellation "Hannah" Script below Felfel (Exact match to 1000699973.jpg)
+        function drawHannahConstellation(cx, y, scale, t) {
+            ctx.save();
+            ctx.translate(cx, y);
+            const pulse = 0.85 + 0.15 * Math.sin(t * 2.5);
+
+            ctx.font = `700 ${Math.round(scale * 0.44)}px 'Caveat', cursive`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Outer electric blue nebula glow
+            ctx.shadowColor = '#0ea5e9';
+            ctx.shadowBlur = 22 * pulse;
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
+            ctx.lineWidth = 4;
+            ctx.strokeText('Hannah', 0, 0);
+
+            // Inner bright cyan-white starlight core
+            ctx.shadowColor = '#7dd3fc';
+            ctx.shadowBlur = 10;
+            ctx.fillStyle = '#e0f2fe';
+            ctx.fillText('Hannah', 0, 0);
+
+            // Constellation key stars along the "Hannah" letters
+            const starOffsets = [
+                [-0.52, -0.09], [-0.46, 0.11], [-0.34, -0.10], [-0.39, 0.10],
+                [-0.22, 0.04], [-0.05, 0.04], [0.12, 0.04], [0.32, -0.09], [0.45, 0.05]
+            ];
+            for (let i = 0; i < starOffsets.length; i++) {
+                const sx = starOffsets[i][0] * scale;
+                const sy = starOffsets[i][1] * scale;
+                const tw = 1.8 + Math.sin(t * 4 + i) * 0.9;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(sx, sy, tw, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        // SCENE 1: Exact "Hannah" Cosmic Nebula Loaf Portrait (1000699973.jpg)
+        function drawCosmicHannahLoaf(cx, cy, s, t, breath, chinLift, boopSquish, kneadOffset) {
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            // Outer Blue & Fiery Orange Nebula Aura Clouds (matching 1000699973.jpg)
+            if (state.cosmicAura) {
+                const auraBlue = ctx.createRadialGradient(s * 0.1, 0, s * 0.1, 0, 0, s * 1.18);
+                auraBlue.addColorStop(0, 'rgba(56, 189, 248, 0.32)');
+                auraBlue.addColorStop(0.5, 'rgba(14, 116, 144, 0.18)');
+                auraBlue.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = auraBlue;
+                ctx.beginPath();
+                ctx.arc(0, 0, s * 1.18, 0, Math.PI * 2);
+                ctx.fill();
+
+                const auraGold = ctx.createRadialGradient(-s * 0.25, -s * 0.08, s * 0.05, -s * 0.2, 0, s * 0.85);
+                auraGold.addColorStop(0, 'rgba(249, 115, 22, 0.30)');
+                auraGold.addColorStop(0.6, 'rgba(234, 88, 12, 0.12)');
+                auraGold.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = auraGold;
+                ctx.beginPath();
+                ctx.arc(-s * 0.2, 0, s * 0.85, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Apply gentle breathing & interactive squish
+            ctx.scale(1 + boopSquish * 0.05, 1 + breath * 0.018 - boopSquish * 0.04);
+
+            // 1. LOAF BODY & ARCHED HAUNCH (Left/Back - Glowing Ginger-Gold Nebula)
+            ctx.save();
+            ctx.shadowColor = state.cosmicAura ? '#f97316' : 'rgba(0,0,0,0.4)';
+            ctx.shadowBlur = state.cosmicAura ? 24 : 12;
+
+            const bodyGrad = ctx.createRadialGradient(-s * 0.22, -s * 0.05, s * 0.05, -s * 0.18, s * 0.08, s * 0.72);
+            bodyGrad.addColorStop(0, '#fb923c');
+            bodyGrad.addColorStop(0.45, '#c2410c');
+            bodyGrad.addColorStop(0.85, '#431407');
+            bodyGrad.addColorStop(1, '#0c1938');
+
+            ctx.fillStyle = bodyGrad;
+            ctx.beginPath();
+            ctx.moveTo(-s * 0.86, s * 0.18);
+            ctx.bezierCurveTo(-s * 0.82, -s * 0.34, -s * 0.32, -s * 0.36, s * 0.12, -s * 0.22);
+            ctx.bezierCurveTo(s * 0.42, -s * 0.10, s * 0.56, s * 0.24, s * 0.32, s * 0.38);
+            ctx.bezierCurveTo(-s * 0.12, s * 0.46, -s * 0.78, s * 0.42, -s * 0.86, s * 0.18);
+            ctx.closePath();
+            ctx.fill();
+
+            // Glowing Electric-Blue & White Diagonal Shoulder Collar Stripe + Chest + Tucked Front Paw!
+            const collarGrad = ctx.createLinearGradient(-s * 0.15, -s * 0.15, s * 0.48, s * 0.42);
+            if (state.cosmicAura) {
+                collarGrad.addColorStop(0, '#e0f2fe');
+                collarGrad.addColorStop(0.5, '#38bdf8');
+                collarGrad.addColorStop(1, '#0284c7');
+            } else {
+                collarGrad.addColorStop(0, '#ffffff');
+                collarGrad.addColorStop(1, '#e2e8f0');
+            }
+            ctx.shadowColor = '#38bdf8';
+            ctx.shadowBlur = state.cosmicAura ? 22 : 0;
+            ctx.fillStyle = collarGrad;
+
+            // Diagonal Shoulder Stripe (Iconic Lolo marking from Photo 5 & Cosmic Cover)
+            ctx.beginPath();
+            ctx.moveTo(-s * 0.06, -s * 0.14);
+            ctx.quadraticCurveTo(s * 0.12, s * 0.02, s * 0.34, s * 0.22);
+            ctx.quadraticCurveTo(s * 0.18, s * 0.36, -s * 0.08, s * 0.18);
+            ctx.quadraticCurveTo(-s * 0.22, s * 0.04, -s * 0.06, -s * 0.14);
+            ctx.fill();
+
+            // Tucked White/Blue Front Paws (kneads when knead animation active!)
+            ctx.beginPath();
+            ctx.ellipse(s * 0.24 + kneadOffset * 8, s * 0.31 - Math.abs(kneadOffset) * 5, s * 0.24, s * 0.11, -0.12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // 2. FELFEL'S 3/4 RIGHT-FACING HEAD (Matches 1000699973.jpg & Hannah photo!)
+            ctx.save();
+            ctx.translate(s * 0.32, -s * 0.14 - chinLift * s * 0.08);
+            ctx.rotate(-chinLift * 0.16);
+
+            // Back/Right Ear (Glowing Cyan-Tipped Ear)
+            ctx.shadowColor = '#38bdf8';
+            ctx.shadowBlur = state.cosmicAura ? 18 : 0;
+            ctx.fillStyle = state.cosmicAura ? '#38bdf8' : '#d97706';
+            ctx.beginPath();
+            ctx.moveTo(s * 0.12, -s * 0.24);
+            ctx.lineTo(s * 0.38, -s * 0.48);
+            ctx.lineTo(s * 0.28, -s * 0.14);
+            ctx.closePath();
+            ctx.fill();
+
+            // Front/Left Ear (Tall Iconic Ginger-Gold Ear with Glowing Starlight Rim)
+            ctx.shadowColor = '#f97316';
+            ctx.shadowBlur = state.cosmicAura ? 20 : 0;
+            const earGrad = ctx.createLinearGradient(-s * 0.22, -s * 0.52, -s * 0.02, -s * 0.12);
+            earGrad.addColorStop(0, '#fb923c');
+            earGrad.addColorStop(0.6, '#ea580c');
+            earGrad.addColorStop(1, '#7c2d12');
+            ctx.fillStyle = earGrad;
+            ctx.beginPath();
+            ctx.moveTo(-s * 0.22, -s * 0.12);
+            ctx.quadraticCurveTo(-s * 0.28, -s * 0.44, -s * 0.14, -s * 0.50);
+            ctx.quadraticCurveTo(s * 0.02, -s * 0.42, s * 0.05, -s * 0.18);
+            ctx.closePath();
+            ctx.fill();
+
+            // Inner ear wisps (blue-white cosmic hairs)
+            ctx.fillStyle = state.cosmicAura ? 'rgba(186, 230, 253, 0.7)' : 'rgba(253, 186, 116, 0.7)';
+            ctx.beginPath();
+            ctx.moveTo(-s * 0.17, -s * 0.16);
+            ctx.lineTo(-s * 0.13, -s * 0.41);
+            ctx.lineTo(-s * 0.01, -s * 0.20);
+            ctx.closePath();
+            ctx.fill();
+
+            // Cranium & Cheek (Golden-Ginger with Dark Tabby Cheek Stripes)
+            const headGrad = ctx.createRadialGradient(-s * 0.02, -s * 0.04, s * 0.04, 0, 0, s * 0.38);
+            headGrad.addColorStop(0, '#fb923c');
+            headGrad.addColorStop(0.65, '#c2410c');
+            headGrad.addColorStop(1, '#431407');
+            ctx.fillStyle = headGrad;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, s * 0.34, s * 0.28, 0.08, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Glowing White / Starlight-Blue Forehead Blaze, Nose Bridge & Muzzle (3/4 right profile)
+            const blazeGrad = ctx.createLinearGradient(s * 0.08, -s * 0.22, s * 0.36, s * 0.18);
+            blazeGrad.addColorStop(0, state.cosmicAura ? '#e0f2fe' : '#ffffff');
+            blazeGrad.addColorStop(0.6, state.cosmicAura ? '#7dd3fc' : '#f8fafc');
+            blazeGrad.addColorStop(1, state.cosmicAura ? '#38bdf8' : '#e2e8f0');
+            ctx.shadowColor = '#38bdf8';
+            ctx.shadowBlur = state.cosmicAura ? 18 : 0;
+            ctx.fillStyle = blazeGrad;
+            ctx.beginPath();
+            ctx.moveTo(s * 0.12, -s * 0.22);
+            ctx.quadraticCurveTo(s * 0.34, -s * 0.06, s * 0.37, s * 0.06);
+            ctx.quadraticCurveTo(s * 0.32, s * 0.20, s * 0.12, s * 0.18);
+            ctx.quadraticCurveTo(s * 0.04, s * 0.08, s * 0.12, -s * 0.22);
+            ctx.fill();
+
+            // Felfel's Signature Apricot Patch on the Whisker Pad (with tiny whisker dots!)
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#ea580c';
+            ctx.beginPath();
+            ctx.ellipse(s * 0.23, s * 0.10, s * 0.085, s * 0.052, 0.15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pink Nose Tip
+            ctx.fillStyle = '#fb7185';
+            ctx.beginPath();
+            ctx.moveTo(s * 0.37, s * 0.04);
+            ctx.lineTo(s * 0.31, s * 0.09);
+            ctx.lineTo(s * 0.34, s * 0.12);
+            ctx.closePath();
+            ctx.fill();
+
+            // Eyes (Left/Near Eye & Right/Far Eye in 3/4 view)
+            const isBlinking = chinLift > 0.3 || (Math.sin(t * 1.6) > 0.96);
+            if (isBlinking) {
+                ctx.strokeStyle = '#fef08a';
+                ctx.lineWidth = 3.2;
+                ctx.beginPath();
+                ctx.arc(s * 0.08, -s * 0.02, s * 0.065, 0.15, Math.PI - 0.15);
+                ctx.stroke();
+            } else {
+                // Near Eye
+                ctx.fillStyle = '#090d16';
+                ctx.beginPath();
+                ctx.ellipse(s * 0.08, -s * 0.02, s * 0.068, s * 0.062, -0.1, 0, Math.PI * 2);
+                ctx.fill();
+                // Olive-Amber & Cosmic Cyan Iris Rim
+                ctx.strokeStyle = state.cosmicAura ? '#38bdf8' : '#ca8a04';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+                // Eye Catchlight
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(s * 0.065, -s * 0.04, s * 0.02, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Far Eye (partially visible on right side of nose bridge)
+                ctx.fillStyle = '#090d16';
+                ctx.beginPath();
+                ctx.ellipse(s * 0.29, -s * 0.04, s * 0.032, s * 0.048, 0.15, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(s * 0.285, -s * 0.055, s * 0.012, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Glowing White Cosmic Whiskers (Sweeping forward & down like 1000699973.jpg)
+            ctx.strokeStyle = 'rgba(224, 242, 254, 0.85)';
+            ctx.lineWidth = 1.4;
+            for (let w = 0; w < 6; w++) {
+                ctx.beginPath();
+                ctx.moveTo(s * 0.20, s * 0.10 + w * 2.2);
+                ctx.quadraticCurveTo(s * 0.02, s * 0.16 + w * 4.5, -s * 0.16, s * 0.24 + w * 6.5);
+                ctx.stroke();
+            }
+            for (let w = 0; w < 4; w++) {
+                ctx.beginPath();
+                ctx.moveTo(s * 0.34, s * 0.09 + w * 2.0);
+                ctx.quadraticCurveTo(s * 0.48, s * 0.14 + w * 3.5, s * 0.58, s * 0.22 + w * 5.0);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // Key Constellation Star Flares on the Cat Outline (just like 1000699973.jpg)
+            if (state.cosmicAura) {
+                drawStarFlare(-s * 0.52, -s * 0.72, 3.5, '#38bdf8');
+                drawStarFlare(s * 0.18, -s * 0.64, 2.8, '#fbbf24');
+                drawStarFlare(-s * 0.72, s * 0.38, 2.8, '#fde047');
+                drawStarFlare(s * 0.68, s * 0.56, 3.2, '#38bdf8');
+            }
+
+            ctx.restore();
+
+            // Draw the Glowing Blue "Hannah" Constellation Signature underneath!
+            drawHannahConstellation(cx, cy + s * 0.76, s, t);
+        }
+
+        // SCENE 2: "Tuesday like this" Overhead Close-up Portrait (1000697929_3.jpg)
+        function drawTuesdayCloseUp(cx, cy, s, t, breath, chinLift, boopSquish) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(1 + boopSquish * 0.06, 1 + breath * 0.018 - boopSquish * 0.05);
+
+            // Cosmic Halo
+            if (state.cosmicAura) {
+                ctx.shadowColor = '#38bdf8';
+                ctx.shadowBlur = 28;
+            }
+
+            // Round Close-up Head tilted slightly like Photo 1
+            ctx.rotate(-0.18);
+
+            // Ears
+            ctx.fillStyle = '#c2410c';
+            ctx.beginPath();
+            ctx.moveTo(-s * 0.55, -s * 0.25);
+            ctx.lineTo(-s * 0.72, -s * 0.72);
+            ctx.lineTo(-s * 0.22, -s * 0.55);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(s * 0.55, -s * 0.25);
+            ctx.lineTo(s * 0.72, -s * 0.72);
+            ctx.lineTo(s * 0.22, -s * 0.55);
+            ctx.fill();
+
+            // Ginger Head Base
+            const headGrad = ctx.createRadialGradient(0, 0, s * 0.1, 0, 0, s * 0.68);
+            headGrad.addColorStop(0, '#ea580c');
+            headGrad.addColorStop(0.75, '#9a3412');
+            headGrad.addColorStop(1, '#431407');
+            ctx.fillStyle = headGrad;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, s * 0.66, s * 0.58, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // White Inverted-V Blaze, Muzzle & Chin
+            ctx.fillStyle = '#fffbeb';
+            ctx.beginPath();
+            ctx.moveTo(0, -s * 0.34);
+            ctx.quadraticCurveTo(s * 0.14, 0, s * 0.38, s * 0.25);
+            ctx.quadraticCurveTo(0, s * 0.58, -s * 0.38, s * 0.25);
+            ctx.quadraticCurveTo(-s * 0.14, 0, 0, -s * 0.34);
+            ctx.fill();
+
+            // Felfel's Signature Apricot Patch on One Side of the Mouth!
+            ctx.fillStyle = '#d97706';
+            ctx.beginPath();
+            ctx.ellipse(-s * 0.18, s * 0.22, s * 0.12, s * 0.08, -0.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Big Olive-Gold / Amber Eyes (Looking right up at you!)
+            [-1, 1].forEach(dir => {
+                const ex = dir * s * 0.25;
+                const ey = -s * 0.08;
+                ctx.fillStyle = '#a16207';
+                ctx.beginPath();
+                ctx.ellipse(ex, ey, s * 0.15, s * 0.135, dir * 0.12, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Huge Dilated Black Pupil
+                ctx.fillStyle = '#09090b';
+                ctx.beginPath();
+                ctx.arc(ex + state.eyeLookX * 6, ey + state.eyeLookY * 6, s * 0.105, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Glossy Window Catchlight
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(ex - s * 0.04, ey - s * 0.04, s * 0.032, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Bubblegum Pink Nose + Tiny Brown Freckle on the left side of the nose!
+            ctx.fillStyle = '#f472b6';
+            ctx.beginPath();
+            ctx.moveTo(-s * 0.09, s * 0.11);
+            ctx.lineTo(s * 0.09, s * 0.11);
+            ctx.lineTo(0, s * 0.22);
+            ctx.closePath();
+            ctx.fill();
+
+            // Iconic Tiny Brown Nose Freckle (from 1000697929_3.jpg!)
+            ctx.fillStyle = '#78350f';
+            ctx.beginPath();
+            ctx.arc(-s * 0.032, s * 0.15, s * 0.016, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Mouth W
+            ctx.strokeStyle = '#9f1239';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(0, s * 0.22);
+            ctx.quadraticCurveTo(-s * 0.06, s * 0.28, -s * 0.13, s * 0.25);
+            ctx.moveTo(0, s * 0.22);
+            ctx.quadraticCurveTo(s * 0.06, s * 0.28, s * 0.13, s * 0.25);
+            ctx.stroke();
+
+            ctx.restore();
+
+            // "Tuesday like this" Caption Overlay
+            ctx.save();
+            ctx.font = `900 ${Math.round(s * 0.18)}px Georgia, serif`;
+            ctx.fillStyle = '#fef9c3';
+            ctx.textAlign = 'center';
+            ctx.fillText('Tuesday', cx - s * 0.08, cy - s * 0.72);
+            ctx.font = `italic ${Math.round(s * 0.20)}px 'Caveat', cursive`;
+            ctx.fillStyle = '#bae6fd';
+            ctx.fillText('like this ✨', cx + s * 0.22, cy - s * 0.58);
+            ctx.restore();
+        }
+
+        // SCENE 3: Hugging the Smartphone ("كله م الهباب الزفت الموبايل" - 1000697928_3.jpg)
+        function drawPhoneHugScene(cx, cy, s, t, breath, kneadOffset) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(1, 1 + breath * 0.016);
+
+            // White Torso & Neck on right
+            ctx.fillStyle = '#f8fafc';
+            ctx.shadowColor = '#38bdf8';
+            ctx.shadowBlur = state.cosmicAura ? 20 : 0;
+            ctx.beginPath();
+            ctx.ellipse(s * 0.18, s * 0.22, s * 0.48, s * 0.38, -0.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Head looking up-left (matching 1000697928_3.jpg)
+            ctx.save();
+            ctx.translate(0, -s * 0.22);
+            ctx.fillStyle = '#d97706';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, s * 0.42, s * 0.34, -0.15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Long Right Ear
+            ctx.beginPath();
+            ctx.moveTo(s * 0.22, -s * 0.20);
+            ctx.lineTo(s * 0.58, -s * 0.42);
+            ctx.lineTo(s * 0.36, -s * 0.02);
+            ctx.fill();
+
+            // White Face & Chin
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(-s * 0.12, s * 0.04, s * 0.28, s * 0.24, -0.15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Apricot Patch on Muzzle
+            ctx.fillStyle = '#ea580c';
+            ctx.beginPath();
+            ctx.ellipse(-s * 0.22, s * 0.02, s * 0.08, s * 0.05, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pink Nose
+            ctx.fillStyle = '#f472b6';
+            ctx.beginPath();
+            ctx.arc(-s * 0.32, -s * 0.05, s * 0.045, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Big Golden Eye
+            ctx.fillStyle = '#a16207';
+            ctx.beginPath();
+            ctx.ellipse(0, -s * 0.06, s * 0.085, s * 0.07, -0.1, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#09090b';
+            ctx.beginPath();
+            ctx.arc(-s * 0.01, -s * 0.06, s * 0.055, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // The Smartphone in Rose-Brown Case (Left Foreground)
+            ctx.save();
+            ctx.translate(-s * 0.34, s * 0.24);
+            ctx.rotate(0.42);
+            ctx.fillStyle = '#7c2d12';
+            ctx.strokeStyle = '#a16207';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.roundRect(-s * 0.28, -s * 0.42, s * 0.56, s * 0.84, 22);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#09090b';
+            ctx.beginPath();
+            ctx.roundRect(-s * 0.24, -s * 0.38, s * 0.48, s * 0.76, 16);
+            ctx.fill();
+            ctx.restore();
+
+            // Felfel's Snowy-White Arm & Paw Hugging Across the Phone!
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = 'rgba(0,0,0,0.35)';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.ellipse(-s * 0.04 + kneadOffset * 8, s * 0.24, s * 0.38, s * 0.13, -0.18, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Snapchat Translucent Caption Bar ("كله م الهباب الزفت الموبايل")
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+            ctx.fillRect(-W * 0.5, s * 0.46, W, s * 0.18);
+            ctx.font = `700 ${Math.round(s * 0.11)}px 'Cairo', sans-serif`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.fillText('كله م الهباب الزفت الموبايل 📱🐾', 0, s * 0.57);
+
+            ctx.restore();
+        }
+
+        // SCENE 4: Sunny Chin-Lift Bliss with Curled White Paws & Tiny Heart ♡ (1000697927_2.jpg)
+        function drawSunnyChinScene(cx, cy, s, t, breath, kneadOffset) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(1, 1 + breath * 0.02);
+
+            // White Belly & Chest with Ginger Flank Patch
+            ctx.fillStyle = '#fffbeb';
+            ctx.shadowColor = '#f59e0b';
+            ctx.shadowBlur = state.cosmicAura ? 24 : 0;
+            ctx.beginPath();
+            ctx.ellipse(0, s * 0.22, s * 0.48, s * 0.52, -0.12, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Ginger Shoulder & Side Patch
+            ctx.fillStyle = '#d97706';
+            ctx.beginPath();
+            ctx.ellipse(-s * 0.30, s * 0.12, s * 0.22, s * 0.32, 0.25, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Uplifted Chin & Blissful Smile (Tilted High!)
+            ctx.save();
+            ctx.translate(0, -s * 0.34);
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, s * 0.36, s * 0.28, -0.15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pink Nose Tip at the very top of the lifted chin
+            ctx.fillStyle = '#fb7185';
+            ctx.beginPath();
+            ctx.arc(-s * 0.12, -s * 0.22, s * 0.048, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Blissful Smiling Mouth Arc
+            ctx.strokeStyle = '#9f1239';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(-s * 0.12, -s * 0.15);
+            ctx.quadraticCurveTo(0, -s * 0.08, s * 0.18, -s * 0.09);
+            ctx.stroke();
+            ctx.restore();
+
+            // Two Adorable Curled White Paws on Chest (with tiny heart ♡ between them!)
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = 'rgba(0,0,0,0.28)';
+            ctx.shadowBlur = 12;
+            ctx.beginPath();
+            ctx.ellipse(-s * 0.05, s * 0.08 + kneadOffset * 6, s * 0.16, s * 0.13, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(s * 0.26, s * 0.20 - kneadOffset * 6, s * 0.17, s * 0.14, -0.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Tiny White Heart ♡ on Chest (exact detail from 1000697927_2.jpg!)
+            ctx.font = `${Math.round(s * 0.14)}px sans-serif`;
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.fillText('♡', 0, -s * 0.02);
+
+            ctx.restore();
+        }
+
+        // SCENE 5: Cute Pink Bow & Big Dilated Eyes Filter (1000697930_2.jpg)
+        function drawPinkBowScene(cx, cy, s, t, breath, boopSquish) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(1 + boopSquish * 0.06, 1 + breath * 0.02 - boopSquish * 0.05);
+
+            // Cute Small White Standing Body underneath (like the sticker in 1000697930_2.jpg!)
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = '#f472b6';
+            ctx.shadowBlur = state.cosmicAura ? 22 : 0;
+            ctx.beginPath();
+            ctx.ellipse(0, s * 0.45, s * 0.22, s * 0.26, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Tiny stubby legs
+            ctx.beginPath();
+            ctx.roundRect(-s * 0.12, s * 0.62, s * 0.08, s * 0.16, 10);
+            ctx.roundRect(s * 0.04, s * 0.62, s * 0.08, s * 0.16, 10);
+            ctx.fill();
+
+            // Big Round Fisheye Cute Head!
+            ctx.fillStyle = '#f8fafc';
+            ctx.beginPath();
+            ctx.arc(0, 0, s * 0.48, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Ginger Tabby CrownPatches
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.ellipse(-s * 0.26, -s * 0.24, s * 0.22, s * 0.15, -0.4, 0, Math.PI * 2);
+            ctx.ellipse(s * 0.26, -s * 0.24, s * 0.22, s * 0.15, 0.4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Big Glossy Bambi Eyes
+            [-1, 1].forEach(dir => {
+                ctx.fillStyle = '#18181b';
+                ctx.beginPath();
+                ctx.arc(dir * s * 0.22, -s * 0.06, s * 0.095, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(dir * s * 0.20, -s * 0.09, s * 0.032, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Big Cute Pink Fisheye Nose & Happy ":3" Smile
+            ctx.fillStyle = '#fb7185';
+            ctx.beginPath();
+            ctx.ellipse(0, s * 0.04, s * 0.11, s * 0.08, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = '#be123c';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.arc(-s * 0.06, s * 0.15, s * 0.06, 0, Math.PI);
+            ctx.arc(s * 0.06, s * 0.15, s * 0.06, 0, Math.PI);
+            ctx.stroke();
+
+            // Cute Pink Ribbon Bow on Right Ear (exact match to 1000697930_2.jpg!)
+            ctx.save();
+            ctx.translate(s * 0.34, -s * 0.34);
+            ctx.rotate(0.35);
+            ctx.fillStyle = '#f472b6';
+            ctx.strokeStyle = '#fbcfe8';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.ellipse(-s * 0.10, 0, s * 0.10, s * 0.065, -0.2, 0, Math.PI * 2);
+            ctx.ellipse(s * 0.10, 0, s * 0.10, s * 0.065, 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#ec4899';
+            ctx.beginPath();
+            ctx.arc(0, 0, s * 0.045, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        // Custom Uploaded Photo Renderer (if user chooses a photo file from phone)
+        function drawCustomUploadedPhoto(cx, cy, s, t, breath, boopSquish) {
+            if (!state.customImg) return;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(1 + boopSquish * 0.04, 1 + breath * 0.015 - boopSquish * 0.04);
+
+            if (state.cosmicAura) {
+                ctx.shadowColor = '#38bdf8';
+                ctx.shadowBlur = 32;
+            }
+
+            const w = s * 1.65;
+            const h = s * 1.65 * (state.customImg.height / state.customImg.width);
+            ctx.beginPath();
+            ctx.roundRect(-w * 0.5, -h * 0.5, w, h, 28);
+            ctx.clip();
+            ctx.drawImage(state.customImg, -w * 0.5, -h * 0.5, w, h);
+            ctx.restore();
+
+            drawHannahConstellation(cx, cy + s * 0.82, s, t);
+        }
+
+        /********************************************************************
+         * 4. UI ACTIONS & SCENE SWITCHING
+         ********************************************************************/
+        function setPhotoScene(sceneName) {
+            state.scene = sceneName;
+            ['cosmic', 'tuesday', 'phone', 'sun', 'bow'].forEach(id => {
+                const btn = document.getElementById('scene-' + id);
+                if (!btn) return;
+                if (id === sceneName) btn.classList.add('active-scene');
+                else btn.classList.remove('active-scene');
+            });
+            buildInteractiveFur();
+            sound.meow('sweet');
+
+            const titles = {
+                cosmic: 'غلاف فلفل الفضائي ✨ Hannah',
+                tuesday: 'لقطة Tuesday like this 😻',
+                phone: 'كله م الهباب الزفت الموبايل 📱',
+                sun: 'رفعة الدقن في الشمس ☀️♡',
+                bow: 'لقطة الفيونكة البينك الكيوت 🎀'
+            };
+            if (titles[sceneName]) {
+                spawnFloatingText(W * 0.5, H * 0.25, titles[sceneName]);
+            }
+        }
+
+        function handleUserPhoto(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    state.customImg = img;
+                    state.scene = 'custom';
+                    buildInteractiveFur();
+                    sound.meow('sweet');
+                    spawnFloatingText(W * 0.5, H * 0.25, 'تم تركيب صورة فلفل الأصلية مع شعر ونجوم متفاعلة! 📸🌌');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function setInteractionMode(mode) {
+            document.getElementById('hint-msg').textContent = 'اسحب بصوباعك على فلفل عشان تسرح شعره وتطلع نجوم وقلوب!';
+        }
+
+        function triggerCuteAnim(type) {
+            if (type === 'chin') {
+                state.chinLiftTimer = 1.0;
+                sound.setPurr(0.95);
+                spawnFloatingText(W * 0.5, H * 0.28, 'فلفل رافع دقنه ومغمض عيونه من الدلع 😌💙');
+            } else if (type === 'boop') {
+                state.boopTimer = 1.0;
+                sound.meow('sweet');
+                spawnFloatingText(W * 0.5, H * 0.28, 'بوسة على مناخير فلفل البينك! 👃💗');
+            } else if (type === 'knead') {
+                state.kneadTimer = 1.0;
+                sound.meow('trill');
+                spawnFloatingText(W * 0.5, H * 0.28, 'فلفل بيعجن بكفوفه البيضا من الفرحة! 🐾🥐');
+            } else if (type === 'treat') {
+                state.treatTimer = 1.0;
+                sound.meow('sweet');
+                spawnFloatingText(W * 0.5, H * 0.28, 'أحلى سمكة لفلفل حبيبنا! 🐟😋');
+                for (let i = 0; i < 6; i++) {
+                    spawnHeart(W * (0.3 + Math.random() * 0.4), H * (0.4 + Math.random() * 0.2), i % 2 === 0 ? '🐟' : '💙');
+                }
+            }
+            incrementLove(3);
+        }
+
+        function triggerSupernovaLove() {
+            sound.meow('sweet');
+            for (let i = 0; i < 28; i++) {
+                const angle = (i / 28) * Math.PI * 2;
+                const sp = 2 + Math.random() * 5;
+                dustParticles.push({
+                    x: W * 0.5,
+                    y: H * 0.45,
+                    vx: Math.cos(angle) * sp,
+                    vy: Math.sin(angle) * sp,
+                    r: 2.5 + Math.random() * 3.5,
+                    life: 1.0,
+                    color: i % 2 === 0 ? '#38bdf8' : '#fbbf24'
+                });
+            }
+            spawnFloatingText(W * 0.5, H * 0.26, 'شلال نجوم لعيون فلفل (لولو) ✨🌌💙');
+            incrementLove(5);
+        }
+
+        function toggleCosmicAura() {
+            state.cosmicAura = !state.cosmicAura;
+            const btn = document.getElementById('btn-cosmic-glow');
+            btn.className = state.cosmicAura
+                ? 'cosmic-btn w-9 h-9 rounded-2xl bg-sky-500/30 border border-sky-300/60 flex items-center justify-center text-base shadow-sm'
+                : 'cosmic-btn w-9 h-9 rounded-2xl bg-slate-900/90 border border-sky-500/30 flex items-center justify-center text-base opacity-60 shadow-sm';
+        }
+
+        function toggleAudio() {
+            sound.enabled = !sound.enabled;
+            const icon = document.getElementById('sound-icon');
+            if (sound.enabled) {
+                icon.className = 'fa-solid fa-volume-high';
+                sound.meow('trill');
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-rose-400';
+                sound.setPurr(0);
+            }
+        }
+
+        function incrementLove(amount = 1) {
+            state.touches++;
+            state.love = Math.min(100, state.love + amount);
+            document.getElementById('touch-counter').textContent = state.touches;
+            document.getElementById('love-bar').style.width = `${state.love}%`;
+            document.getElementById('love-txt').textContent = `${state.love}%`;
+        }
+
+        function spawnFloatingText(x, y, text) {
+            const layer = document.getElementById('fx-layer');
+            const el = document.createElement('div');
+            el.className = 'float-item text-xs sm:text-sm bg-slate-950/90 text-sky-200 px-3.5 py-1 rounded-full border border-sky-400/50 shadow-lg';
+            el.style.left = `${Math.max(90, Math.min(W - 90, x))}px`;
+            el.style.top = `${Math.max(105, Math.min(H - 175, y))}px`;
+            el.textContent = text;
+            layer.appendChild(el);
+            setTimeout(() => el.remove(), 1100);
+        }
+
+        function spawnHeart(x, y, emoji = '💙') {
+            const layer = document.getElementById('fx-layer');
+            const el = document.createElement('div');
+            el.className = 'float-item text-xl';
+            el.style.left = `${x + (Math.random() - 0.5) * 30}px`;
+            el.style.top = `${y}px`;
+            el.textContent = emoji;
+            layer.appendChild(el);
+            setTimeout(() => el.remove(), 1050);
+        }
+
+        /********************************************************************
+         * 5. TOUCH & SWIPE INTERACTION (PARTING FUR + STARLIGHT TRAIL)
+         ********************************************************************/
+        let lastHeartTime = 0;
+
+        function onMovePointer(x, y) {
+            state.vx = x - state.lastPointerX;
+            state.vy = y - state.lastPointerY;
+            state.lastPointerX = x;
+            state.lastPointerY = y;
+            state.pointerX = x;
+            state.pointerY = y;
+
+            state.eyeLookX = (x - W * 0.5) / (W * 0.5);
+            state.eyeLookY = (y - H * 0.45) / (H * 0.5);
+
+            // Spawn cosmic stardust particles along finger stroke
+            for (let i = 0; i < 2; i++) {
+                dustParticles.push({
+                    x: x + (Math.random() - 0.5) * 16,
+                    y: y + (Math.random() - 0.5) * 16,
+                    vx: (Math.random() - 0.5) * 1.8 + state.vx * 0.08,
+                    vy: -0.8 - Math.random() * 1.5,
+                    r: 1.8 + Math.random() * 2.4,
+                    life: 1.0,
+                    color: Math.random() > 0.45 ? '#38bdf8' : '#fbbf24'
+                });
+            }
+
+            // Bend interactive fur strands near the finger!
+            const brushRadius = 68;
+            const moveAngle = Math.atan2(state.vy, state.vx);
+            let touchedAnyStrand = false;
+
+            for (let i = 0; i < furStrands.length; i++) {
+                const f = furStrands[i];
+                const dx = f.x - x;
+                const dy = f.y - y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < brushRadius) {
+                    touchedAnyStrand = true;
+                    const influence = (1 - dist / brushRadius);
+                    f.angle += (moveAngle - f.angle) * influence * 0.55;
+                    f.glow = Math.min(1.0, f.glow + influence * 0.65);
+                }
+            }
+
+            if (touchedAnyStrand) {
+                state.purr = Math.min(1.0, state.purr + 0.09);
+                const now = performance.now();
+                if (now - lastHeartTime > 260) {
+                    lastHeartTime = now;
+                    incrementLove(1);
+                    const emojis = ['💙', '✨', '🧡', '🐾'];
+                    spawnHeart(x, y - 24, emojis[Math.floor(Math.random() * emojis.length)]);
+                    if (Math.random() < 0.14) sound.meow('sweet');
+                }
+            }
+        }
+
+        window.addEventListener('touchstart', (e) => {
+            if (e.target.closest('header') || e.target.closest('footer')) return;
+            const touch = e.touches[0];
+            state.isDown = true;
+            state.lastPointerX = touch.clientX;
+            state.lastPointerY = touch.clientY;
+            onMovePointer(touch.clientX, touch.clientY);
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!state.isDown || e.target.closest('header') || e.target.closest('footer')) return;
+            const touch = e.touches[0];
+            onMovePointer(touch.clientX, touch.clientY);
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => { state.isDown = false; });
+
+        window.addEventListener('mousedown', (e) => {
+            if (e.target.closest('header') || e.target.closest('footer')) return;
+            state.isDown = true;
+            state.lastPointerX = e.clientX;
+            state.lastPointerY = e.clientY;
+            onMovePointer(e.clientX, e.clientY);
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!state.isDown) return;
+            onMovePointer(e.clientX, e.clientY);
+        });
+        window.addEventListener('mouseup', () => { state.isDown = false; });
+
+        /********************************************************************
+         * 6. MAIN 60FPS RENDER LOOP (LIGHTWEIGHT & SMOOTH)
+         ********************************************************************/
+        function animate() {
+            requestAnimationFrame(animate);
+            const t = performance.now() * 0.001;
+
+            ctx.clearRect(0, 0, W, H);
+
+            // 1. Render Twinkling Space Stars
+            for (let i = 0; i < bgStars.length; i++) {
+                const st = bgStars[i];
+                const alpha = 0.35 + 0.65 * Math.abs(Math.sin(t * st.speed + st.phase));
+                const sx = st.x * W;
+                const sy = st.y * H;
+
+                ctx.fillStyle = st.color;
+                ctx.globalAlpha = alpha;
+                ctx.beginPath();
+                ctx.arc(sx, sy, st.r, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (st.bright) {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 0.8;
+                    ctx.beginPath();
+                    ctx.moveTo(sx - st.r * 3.2, sy);
+                    ctx.lineTo(sx + st.r * 3.2, sy);
+                    ctx.moveTo(sx, sy - st.r * 3.2);
+                    ctx.lineTo(sx, sy + st.r * 3.2);
+                    ctx.stroke();
+                }
+            }
+            ctx.globalAlpha = 1.0;
+
+            // Decay animation timers smoothly
+            state.chinLiftTimer = Math.max(0, state.chinLiftTimer - 0.012);
+            state.boopTimer = Math.max(0, state.boopTimer - 0.025);
+            state.kneadTimer = Math.max(0, state.kneadTimer - 0.010);
+            state.treatTimer = Math.max(0, state.treatTimer - 0.015);
+
+            if (!state.isDown && state.chinLiftTimer <= 0) {
+                state.purr = Math.max(0, state.purr - 0.02);
+            }
+            sound.setPurr(state.purr);
+
+            const purrPill = document.getElementById('purr-pill');
+            if (state.purr > 0.25) purrPill.classList.remove('hidden');
+            else purrPill.classList.add('hidden');
+
+            // 2. Render Active Felfel Photo Scene
+            const cx = W * 0.5;
+            const cy = H * 0.45;
+            const scale = Math.min(W, H) * 0.40;
+            const breath = Math.sin(t * 2.7);
+            const kneadWave = state.kneadTimer > 0 ? Math.sin(t * 9.0) * state.kneadTimer : 0;
+            const boopWave = Math.sin(state.boopTimer * Math.PI);
+
+            if (state.scene === 'cosmic') {
+                drawCosmicHannahLoaf(cx, cy, scale, t, breath, state.chinLiftTimer, boopWave, kneadWave);
+            } else if (state.scene === 'tuesday') {
+                drawTuesdayCloseUp(cx, cy, scale, t, breath, state.chinLiftTimer, boopWave);
+            } else if (state.scene === 'phone') {
+                drawPhoneHugScene(cx, cy, scale, t, breath, kneadWave);
+            } else if (state.scene === 'sun') {
+                drawSunnyChinScene(cx, cy, scale, t, breath, kneadWave);
+            } else if (state.scene === 'bow') {
+                drawPinkBowScene(cx, cy, scale, t, breath, boopWave);
+            } else if (state.scene === 'custom') {
+                drawCustomUploadedPhoto(cx, cy, scale, t, breath, boopWave);
+            }
+
+            // 3. Render Interactive Silky Fur Strands & Cosmic Starlight Tips
+            ctx.lineCap = 'round';
+            for (let i = 0; i < furStrands.length; i++) {
+                const f = furStrands[i];
+                // Spring back to natural fur flow
+                const springForce = (f.baseAngle - f.angle) * 0.12;
+                f.vel = (f.vel + springForce) * 0.82;
+                f.angle += f.vel;
+                f.glow *= 0.94;
+
+                const ex = f.x + Math.cos(f.angle) * f.len;
+                const ey = f.y + Math.sin(f.angle) * f.len;
+
+                if (f.isWhiteBlue) {
+                    ctx.strokeStyle = f.glow > 0.15
+                        ? `rgba(125, 211, 252, ${0.45 + f.glow * 0.55})`
+                        : (state.cosmicAura ? 'rgba(186, 230, 253, 0.36)' : 'rgba(255, 255, 255, 0.40)');
+                } else {
+                    ctx.strokeStyle = f.glow > 0.15
+                        ? `rgba(253, 224, 71, ${0.45 + f.glow * 0.55})`
+                        : 'rgba(251, 146, 60, 0.36)';
+                }
+
+                ctx.lineWidth = 1.6 + f.glow * 1.4;
+                ctx.beginPath();
+                ctx.moveTo(f.x, f.y);
+                ctx.lineTo(ex, ey);
+                ctx.stroke();
+            }
+
+            // 4. Render Floating Cosmic Stardust Trail
+            for (let i = dustParticles.length - 1; i >= 0; i--) {
+                const p = dustParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.024;
+                if (p.life <= 0) {
+                    dustParticles.splice(i, 1);
+                    continue;
+                }
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+        }
+
+        window.onload = function () {
+            animate();
+        };
+    </script>
+</body>
+</html>
+```
